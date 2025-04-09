@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
 import { PlusCircle, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface Produto {
   id: string
@@ -38,176 +38,155 @@ export function NovoAtendimentoTecnicoDialog({
 }: NovoAtendimentoTecnicoDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const [dataAtendimento, setDataAtendimento] = useState("")
   const [local, setLocal] = useState("")
   const [status, setStatus] = useState("Concluído")
   const [descricao, setDescricao] = useState("")
   const [observacoes, setObservacoes] = useState("")
-  const [itensSelecionados, setItensSelecionados] = useState<{ produtoId: string; quantidade: number }[]>([])
-  const [produtoAtual, setProdutoAtual] = useState("")
-  const [quantidadeAtual, setQuantidadeAtual] = useState(1)
 
-  useEffect(() => {
-    // Definir a data atual como padrão
-    const hoje = new Date()
-    const dataFormatada = hoje.toISOString().split("T")[0]
-    setDataAtendimento(dataFormatada)
-  }, [])
+  const [selectedProdutoId, setSelectedProdutoId] = useState("")
+  const [quantidade, setQuantidade] = useState(1)
+  const [itensSelecionados, setItensSelecionados] = useState<{ produtoId: string; quantidade: number; nome: string }[]>(
+    [],
+  )
 
   const resetForm = () => {
-    const hoje = new Date()
-    const dataFormatada = hoje.toISOString().split("T")[0]
-    setDataAtendimento(dataFormatada)
+    setDataAtendimento("")
     setLocal("")
     setStatus("Concluído")
     setDescricao("")
     setObservacoes("")
+    setSelectedProdutoId("")
+    setQuantidade(1)
     setItensSelecionados([])
-    setProdutoAtual("")
-    setQuantidadeAtual(1)
+    setError(null)
   }
 
-  const adicionarItem = () => {
-    if (!produtoAtual) {
-      toast({
-        title: "Erro",
-        description: "Selecione um produto",
-        variant: "destructive",
-      })
+  const handleAddItem = () => {
+    if (!selectedProdutoId) {
+      setError("Selecione um produto")
       return
     }
 
-    if (quantidadeAtual <= 0) {
-      toast({
-        title: "Erro",
-        description: "A quantidade deve ser maior que zero",
-        variant: "destructive",
-      })
+    if (quantidade <= 0) {
+      setError("A quantidade deve ser maior que zero")
+      return
+    }
+
+    const produto = produtosEstoque.find((p) => p.id === selectedProdutoId)
+    if (!produto) {
+      setError("Produto não encontrado")
+      return
+    }
+
+    if (quantidade > produto.quantidade) {
+      setError(`Quantidade indisponível. Disponível: ${produto.quantidade}`)
       return
     }
 
     // Verificar se o produto já está na lista
-    const itemExistente = itensSelecionados.find((item) => item.produtoId === produtoAtual)
+    const itemExistente = itensSelecionados.find((item) => item.produtoId === selectedProdutoId)
     if (itemExistente) {
-      // Atualizar a quantidade
+      // Atualizar a quantidade se o produto já estiver na lista
       setItensSelecionados(
         itensSelecionados.map((item) =>
-          item.produtoId === produtoAtual ? { ...item, quantidade: item.quantidade + quantidadeAtual } : item,
+          item.produtoId === selectedProdutoId ? { ...item, quantidade: item.quantidade + quantidade } : item,
         ),
       )
     } else {
-      // Adicionar novo item
-      setItensSelecionados([...itensSelecionados, { produtoId: produtoAtual, quantidade: quantidadeAtual }])
+      // Adicionar novo item à lista
+      setItensSelecionados([...itensSelecionados, { produtoId: selectedProdutoId, quantidade, nome: produto.nome }])
     }
 
-    // Resetar campos
-    setProdutoAtual("")
-    setQuantidadeAtual(1)
+    // Limpar seleção
+    setSelectedProdutoId("")
+    setQuantidade(1)
+    setError(null)
   }
 
-  const removerItem = (produtoId: string) => {
+  const handleRemoveItem = (produtoId: string) => {
     setItensSelecionados(itensSelecionados.filter((item) => item.produtoId !== produtoId))
   }
 
-  const getProdutoNome = (produtoId: string) => {
-    const produto = produtosEstoque.find((p) => p.id === produtoId)
-    return produto ? produto.nome : "Produto não encontrado"
-  }
-
-  const getEstoqueDisponivel = (produtoId: string) => {
-    const produto = produtosEstoque.find((p) => p.id === produtoId)
-    return produto ? produto.quantidade : 0
-  }
-
   const handleSubmit = async () => {
+    setError(null)
+
+    // Validações
+    if (!dataAtendimento) {
+      setError("A data do atendimento é obrigatória")
+      return
+    }
+
     if (!local) {
-      toast({
-        title: "Erro",
-        description: "O local é obrigatório",
-        variant: "destructive",
-      })
+      setError("O local do atendimento é obrigatório")
       return
     }
 
     if (!descricao) {
-      toast({
-        title: "Erro",
-        description: "A descrição é obrigatória",
-        variant: "destructive",
-      })
+      setError("A descrição do atendimento é obrigatória")
       return
     }
 
     if (itensSelecionados.length === 0) {
-      toast({
-        title: "Erro",
-        description: "Adicione pelo menos um item",
-        variant: "destructive",
-      })
+      setError("Selecione pelo menos um produto")
       return
-    }
-
-    // Verificar se há quantidade suficiente para cada item
-    for (const item of itensSelecionados) {
-      const estoqueDisponivel = getEstoqueDisponivel(item.produtoId)
-      if (item.quantidade > estoqueDisponivel) {
-        toast({
-          title: "Erro",
-          description: `Quantidade insuficiente para ${getProdutoNome(item.produtoId)}. Disponível: ${estoqueDisponivel}`,
-          variant: "destructive",
-        })
-        return
-      }
     }
 
     setLoading(true)
 
     try {
+      const atendimentoData = {
+        tecnicoId,
+        dataAtendimento,
+        local,
+        status,
+        descricao,
+        observacoes,
+        itens: itensSelecionados.map((item) => ({
+          produtoId: item.produtoId,
+          quantidade: item.quantidade,
+        })),
+      }
+
+      console.log("Enviando dados:", atendimentoData)
+
       const response = await fetch("/api/atendimentos/tecnico", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          tecnicoId,
-          dataAtendimento,
-          local,
-          status,
-          descricao,
-          observacoes,
-          itens: itensSelecionados,
-        }),
+        body: JSON.stringify(atendimentoData),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "Erro ao registrar atendimento")
+        throw new Error(errorData.message || "Erro ao registrar atendimento")
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Atendimento registrado com sucesso",
-      })
-
-      resetForm()
+      toast("Atendimento registrado com sucesso")
       setOpen(false)
+      resetForm()
       onAtendimentoRegistrado()
     } catch (error) {
       console.error("Erro ao registrar atendimento:", error)
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao registrar atendimento",
-        variant: "destructive",
-      })
+      setError(error instanceof Error ? error.message : "Erro ao registrar atendimento")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        setOpen(newOpen)
+        if (!newOpen) resetForm()
+      }}
+    >
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)}>
+        <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           Novo Atendimento
         </Button>
@@ -217,6 +196,11 @@ export function NovoAtendimentoTecnicoDialog({
           <DialogTitle>Registrar Novo Atendimento</DialogTitle>
           <DialogDescription>Preencha os dados do atendimento e selecione os produtos utilizados.</DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4 dark:bg-red-900/30 dark:text-red-400">{error}</div>
+        )}
+
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -231,7 +215,7 @@ export function NovoAtendimentoTecnicoDialog({
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger id="status">
+                <SelectTrigger>
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,41 +226,29 @@ export function NovoAtendimentoTecnicoDialog({
               </Select>
             </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="local">Local</Label>
-            <Input
-              id="local"
-              placeholder="Local do atendimento"
-              value={local}
-              onChange={(e) => setLocal(e.target.value)}
-            />
+            <Input id="local" value={local} onChange={(e) => setLocal(e.target.value)} />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="descricao">Descrição</Label>
-            <Textarea
-              id="descricao"
-              placeholder="Descreva o atendimento"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-            />
+            <Textarea id="descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="observacoes">Observações (opcional)</Label>
-            <Textarea
-              id="observacoes"
-              placeholder="Observações adicionais"
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-            />
+            <Textarea id="observacoes" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
           </div>
 
           <div className="space-y-4">
-            <div className="font-medium">Produtos Utilizados</div>
+            <Label>Produtos Utilizados</Label>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="produto">Produto</Label>
-                <Select value={produtoAtual} onValueChange={setProdutoAtual}>
-                  <SelectTrigger id="produto">
+                <Select value={selectedProdutoId} onValueChange={setSelectedProdutoId}>
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione um produto" />
                   </SelectTrigger>
                   <SelectContent>
@@ -294,42 +266,50 @@ export function NovoAtendimentoTecnicoDialog({
                   id="quantidade"
                   type="number"
                   min="1"
-                  value={quantidadeAtual}
-                  onChange={(e) => setQuantidadeAtual(Number.parseInt(e.target.value) || 1)}
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(Number.parseInt(e.target.value) || 1)}
                 />
               </div>
               <div className="flex items-end">
-                <Button type="button" onClick={adicionarItem}>
+                <Button type="button" onClick={handleAddItem} className="w-full">
                   Adicionar
                 </Button>
               </div>
             </div>
 
-            {itensSelecionados.length > 0 && (
-              <div className="border rounded-md p-4 mt-4">
-                <div className="font-medium mb-2">Itens Selecionados</div>
+            <div className="border rounded-md p-2 mt-2">
+              <h4 className="font-medium mb-2">Itens Selecionados</h4>
+              {itensSelecionados.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum item selecionado</p>
+              ) : (
                 <div className="space-y-2">
                   {itensSelecionados.map((item) => (
-                    <div key={item.produtoId} className="flex justify-between items-center">
-                      <div>
-                        {getProdutoNome(item.produtoId)} - {item.quantidade} unidades
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => removerItem(item.produtoId)}>
-                        Remover
+                    <div key={item.produtoId} className="flex justify-between items-center p-2 bg-muted rounded-md">
+                      <span>
+                        {item.nome} - {item.quantidade} unidades
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveItem(item.produtoId)}
+                        className="h-8 w-8 p-0"
+                      >
+                        &times;
                       </Button>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Registrar Atendimento
           </Button>
         </DialogFooter>

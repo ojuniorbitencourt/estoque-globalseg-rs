@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const id = params.id
+    // Aguardar os parâmetros antes de acessar suas propriedades
+    const { id } = await Promise.resolve(params)
     console.log("API: Fetching technician with ID:", id)
 
     // Verificar se o ID é válido
@@ -25,7 +26,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           },
         },
         estoqueTecnico: {
-          // Changed from estoque to estoqueTecnico to match the schema
           include: {
             produto: true,
           },
@@ -61,7 +61,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const id = params.id
+    // Aguardar os parâmetros antes de acessar suas propriedades
+    const { id } = await Promise.resolve(params)
     const body = await request.json()
     console.log("API: Updating technician with ID:", id, "Data:", body)
 
