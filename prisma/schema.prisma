@@ -1,0 +1,156 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user") // admin, user, tecnico
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tecnico Tecnico?
+
+  @@map("users")
+}
+
+model Cliente {
+  id            String   @id @default(uuid())
+  nome          String
+  codigoAgencia String   @unique
+  email         String?
+  telefone      String?
+  endereco      String
+  numero        String
+  bairro        String
+  cidade        String
+  estado        String
+  status        String   @default("Ativo")
+  tipo          String   @default("Individual") // Individual, Corporativo
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  atendimentos Atendimento[]
+
+  @@map("clientes")
+}
+
+model Tecnico {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  cargo         String
+  especialidade String?
+  status        String   @default("Ativo")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  atendimentos     Atendimento[]
+  estoqueTecnico   EstoqueTecnico[]
+  movimentacoes    MovimentacaoEstoque[] @relation("TecnicoOrigem")
+  movimentacoesRec MovimentacaoEstoque[] @relation("TecnicoDestino")
+
+  @@map("tecnicos")
+}
+
+model Produto {
+  id                String   @id @default(uuid())
+  nome              String
+  codigo            String   @unique
+  categoria         String
+  status            String   @default("Ativo")
+  quantidadeEstoque Int      @default(0)
+  preco             Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  estoqueTecnico   EstoqueTecnico[]
+  movimentacoes    MovimentacaoEstoque[]
+  itensAtendimento ItemAtendimento[]
+
+  @@map("produtos")
+}
+
+model EstoqueTecnico {
+  tecnicoId  String
+  produtoId  String
+  quantidade Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tecnico Tecnico @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@id([tecnicoId, produtoId])
+  @@map("estoque_tecnicos")
+}
+
+model MovimentacaoEstoque {
+  id               String   @id @default(uuid())
+  produtoId        String
+  quantidade       Int
+  tipo             String // entrada, saida, transferencia
+  origem           String? // ID do técnico ou null
+  destino          String? // ID do técnico ou null
+  observacao       String?
+  dataMovimentacao DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  produto        Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  tecnicoOrigem  Tecnico? @relation("TecnicoOrigem", fields: [origem], references: [id], onDelete: SetNull)
+  tecnicoDestino Tecnico? @relation("TecnicoDestino", fields: [destino], references: [id], onDelete: SetNull)
+
+  @@map("movimentacoes_estoque")
+}
+
+model Atendimento {
+  id              String   @id @default(uuid())
+  tecnicoId       String
+  clienteId       String
+  dataAtendimento DateTime
+  status          String   @default("Aberto") // Aberto, Em Andamento, Concluído, Cancelado
+  descricao       String
+  observacoes     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tecnico Tecnico @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  itens   ItemAtendimento[]
+
+  @@map("atendimentos")
+}
+
+model ItemAtendimento {
+  id            String @id @default(uuid())
+  atendimentoId String
+  produtoId     String
+  quantidade    Int
+
+  atendimento Atendimento @relation(fields: [atendimentoId], references: [id], onDelete: Cascade)
+  produto     Produto     @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@map("itens_atendimento")
+}
+
+model Documento {
+  id        String   @id @default(uuid())
+  nome      String
+  tipo      String
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("documentos")
+}
