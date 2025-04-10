@@ -6,7 +6,7 @@ const categoriasValidas = ["PGDM", "ATM", "Cortinas Eletrônicas", "Loja Ferrage
 export async function POST(request: Request) {
   try {
     const data = await request.json()
-    console.log("Dados recebidos:", data)
+    console.log("Dados recebidos na API alternativa:", data)
 
     // Validar dados
     if (!data.codigo || !data.nome || !data.categoria) {
@@ -27,23 +27,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Já existe um produto com este código" }, { status: 400 })
     }
 
-    // Criar o produto - garantindo que descricao seja uma string ou null
-    const produto = await prisma.produto.create({
-      data: {
-        codigo: data.codigo,
-        nome: data.nome,
-        categoria: data.categoria,
-        descricao: data.descricao || null,
-        quantidadeEstoque: Number(data.quantidadeEstoque) || 0,
-        estoqueMinimo: Number(data.estoqueMinimo) || 5,
-        preco: null, // Definindo explicitamente como null
-        status: "Ativo",
-      },
-    })
+    // Executar SQL direto para evitar problemas com campos obrigatórios
+    const produto = await prisma.$executeRaw`
+      INSERT INTO produtos (
+        id, 
+        codigo, 
+        nome, 
+        categoria, 
+        descricao, 
+        quantidade_estoque, 
+        estoque_minimo, 
+        status, 
+        created_at, 
+        updated_at
+      ) VALUES (
+        gen_random_uuid(), 
+        ${data.codigo}, 
+        ${data.nome}, 
+        ${data.categoria}, 
+        ${data.descricao || null}, 
+        ${Number(data.quantidadeEstoque) || 0}, 
+        ${Number(data.estoqueMinimo) || 5}, 
+        'Ativo', 
+        NOW(), 
+        NOW()
+      )
+    `
 
-    return NextResponse.json(produto, { status: 201 })
+    return NextResponse.json({ success: true, message: "Produto criado com sucesso" }, { status: 201 })
   } catch (error) {
-    console.error("Erro ao criar produto:", error)
+    console.error("Erro ao criar produto (API alternativa):", error)
     return NextResponse.json(
       {
         error: "Erro ao criar produto",
@@ -51,19 +64,5 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     )
-  }
-}
-
-export async function GET() {
-  try {
-    const produtos = await prisma.produto.findMany({
-      where: { status: "Ativo" },
-      orderBy: { nome: "asc" },
-    })
-
-    return NextResponse.json(produtos)
-  } catch (error) {
-    console.error("Erro ao buscar produtos:", error)
-    return NextResponse.json({ error: "Erro ao buscar produtos" }, { status: 500 })
   }
 }

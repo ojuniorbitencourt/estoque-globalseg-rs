@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Package, RefreshCw } from "lucide-react"
+import { AlertCircle, Package, Plus, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { MovimentarEstoqueButton } from "@/components/dashboard/estoque/movimentar-estoque-button"
+import { LimparEstoqueButton } from "@/components/dashboard/estoque/limpar-estoque-button"
 
 export default async function EstoquePage() {
   // Buscar produtos do banco de dados
@@ -15,14 +16,8 @@ export default async function EstoquePage() {
     orderBy: { nome: "asc" },
   })
 
-  // Buscar produtos com estoque baixo - usando abordagem alternativa
-  // Primeiro buscamos todos os produtos ativos
-  const todosProdutos = await prisma.produto.findMany({
-    where: { status: "Ativo" },
-  })
-
-  // Depois filtramos no JavaScript para encontrar os que têm estoque baixo
-  const produtosBaixoEstoque = todosProdutos
+  // Buscar produtos com estoque baixo
+  const produtosBaixoEstoque = produtos
     .filter((produto) => produto.quantidadeEstoque <= produto.estoqueMinimo)
     .sort((a, b) => a.quantidadeEstoque - b.quantidadeEstoque)
 
@@ -92,7 +87,15 @@ export default async function EstoquePage() {
           <Link href="/dashboard/estoque/minimo">
             <Button variant="outline">Configurar Estoque Mínimo</Button>
           </Link>
+          <Link href="/dashboard/estoque/adicionar">
+            <Button variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Produto
+            </Button>
+          </Link>
           <MovimentarEstoqueButton produtos={produtos} />
+          {/* Botão de limpar estoque (apenas em desenvolvimento) */}
+          <LimparEstoqueButton />
         </div>
       </div>
 
@@ -127,7 +130,7 @@ export default async function EstoquePage() {
                     {produtos.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                          Nenhum produto encontrado.
+                          Nenhum produto encontrado. Adicione produtos ao estoque.
                         </TableCell>
                       </TableRow>
                     ) : (
