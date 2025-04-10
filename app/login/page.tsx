@@ -1,19 +1,36 @@
 "use client"
 
-import { type FormEvent, useState } from "react"
-import { useRouter } from "next/navigation"
+import type React from "react"
+
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
+  const authFailed = searchParams.get("auth_failed")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [error, setError] = useState("")
 
-  const handleSubmit = async (e: FormEvent) => {
+  // Limpar o parâmetro de consulta se ele existir
+  useEffect(() => {
+    if (authFailed) {
+      // Remover o parâmetro de consulta da URL sem recarregar a página
+      window.history.replaceState({}, "", "/login")
+    }
+  }, [authFailed])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
     setIsLoading(true)
+    setError("")
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -24,112 +41,73 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Falha ao fazer login")
+        throw new Error(data.message || "Falha ao fazer login")
       }
 
-      router.push("/dashboard")
+      // Redirecionar para o dashboard após login bem-sucedido
+      window.location.href = "/dashboard"
     } catch (error) {
       console.error("Erro ao fazer login:", error)
-      setError(error instanceof Error ? error.message : "Falha ao fazer login")
+      setError(error instanceof Error ? error.message : "Erro ao fazer login")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "400px",
-            padding: "32px",
-            backgroundColor: "white",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: "24px" }}>
-            <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "8px" }}>Sistema ERP - Global Seg</h1>
-            <p style={{ color: "#5f6368" }}>Faça login para acessar o sistema</p>
-          </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+            <CardDescription className="text-center">Entre com suas credenciais para acessar o sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {(authFailed || error) && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {authFailed ? "Sessão expirada ou inválida. Por favor, faça login novamente." : error}
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {error && (
-            <div
-              style={{
-                padding: "12px",
-                backgroundColor: "#fdeded",
-                color: "#c5221f",
-                borderRadius: "4px",
-                marginBottom: "16px",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: "16px" }}>
-              <label htmlFor="email" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "1px solid #dadce0",
-                  borderRadius: "4px",
-                }}
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              <label htmlFor="password" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
-                Senha
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "1px solid #dadce0",
-                  borderRadius: "4px",
-                }}
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                width: "100%",
-                padding: "12px",
-                backgroundColor: "#1a73e8",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                fontWeight: "500",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                opacity: isLoading ? 0.7 : 1,
-              }}
-            >
-              {isLoading ? "Entrando..." : "Entrar"}
-            </button>
-          </form>
-        </div>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Entrando..." : "Entrar"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-muted-foreground">Global Seg - Sistema de Gestão</p>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   )

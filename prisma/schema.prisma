@@ -70,6 +70,7 @@ model Produto {
   categoria         String
   status            String   @default("Ativo")
   quantidadeEstoque Int      @default(0)
+  estoqueMinimo     Int      @default(5)
   preco             Float?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

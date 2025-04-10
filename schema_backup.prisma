@@ -1,0 +1,6 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "neondb", schema "public" at "ep-purple-band-a5q558fz-pooler.us-east-2.aws.neon.tech"
+
+- Introspecting based on datasource defined in prisma\schema.prisma
+✖ Introspecting based on datasource defined in prisma\schema.prisma
