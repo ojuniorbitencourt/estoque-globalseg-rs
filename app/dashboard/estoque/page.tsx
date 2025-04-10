@@ -1,271 +1,83 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Package, Plus, RefreshCw } from "lucide-react"
 import Link from "next/link"
-import { prisma } from "@/lib/prisma"
-import { MovimentarEstoqueButton } from "@/components/dashboard/estoque/movimentar-estoque-button"
-import { LimparEstoqueButton } from "@/components/dashboard/estoque/limpar-estoque-button"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { TabNavigation } from "@/components/dashboard/tab-navigation"
+import { Plus } from "lucide-react"
 
-export default async function EstoquePage() {
-  // Buscar produtos do banco de dados
-  const produtos = await prisma.produto.findMany({
-    where: { status: "Ativo" },
-    orderBy: { nome: "asc" },
-  })
+export default function EstoquePage() {
+  // Simulando dados de produtos
+  const produtos = []
 
-  // Buscar produtos com estoque baixo
-  const produtosBaixoEstoque = produtos
-    .filter((produto) => produto.quantidadeEstoque <= produto.estoqueMinimo)
-    .sort((a, b) => a.quantidadeEstoque - b.quantidadeEstoque)
-
-  // Buscar estoque por técnico
-  const estoqueTecnicos = await prisma.estoqueTecnico.findMany({
-    include: {
-      tecnico: {
-        include: {
-          user: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-      produto: {
-        select: {
-          nome: true,
-          codigo: true,
-        },
-      },
-    },
-    orderBy: [
-      {
-        tecnico: {
-          user: {
-            name: "asc",
-          },
-        },
-      },
-      {
-        produto: {
-          nome: "asc",
-        },
-      },
-    ],
-  })
-
-  // Agrupar estoque por técnico
-  const tecnicosMap = new Map()
-
-  estoqueTecnicos.forEach((item) => {
-    if (!tecnicosMap.has(item.tecnicoId)) {
-      tecnicosMap.set(item.tecnicoId, {
-        id: item.tecnicoId,
-        nome: item.tecnico.user.name,
-        produtos: [],
-      })
-    }
-
-    const tecnico = tecnicosMap.get(item.tecnicoId)
-    tecnico.produtos.push({
-      id: item.produtoId,
-      nome: item.produto.nome,
-      codigo: item.produto.codigo,
-      quantidade: item.quantidade,
-    })
-  })
-
-  const tecnicosEstoque = Array.from(tecnicosMap.values())
+  const tabs = [
+    { id: "geral", label: "Estoque Geral" },
+    { id: "baixo", label: "Estoque Baixo" },
+    { id: "tecnicos", label: "Estoque por Técnico" },
+  ]
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Estoque</h1>
-        <div className="flex gap-2">
-          <Link href="/dashboard/estoque/minimo">
-            <Button variant="outline">Configurar Estoque Mínimo</Button>
-          </Link>
-          <Link href="/dashboard/estoque/adicionar">
-            <Button variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Produto
-            </Button>
-          </Link>
-          <MovimentarEstoqueButton produtos={produtos} />
-          {/* Botão de limpar estoque (apenas em desenvolvimento) */}
-          <LimparEstoqueButton />
+    <div>
+      <PageHeader
+        title="Estoque"
+        subtitle="Gerencie o estoque de produtos e equipamentos"
+        actions={
+          <>
+            <Link href="/dashboard/estoque/minimo">
+              <button className="px-4 py-2 border rounded-md text-sm font-medium bg-white">Configurar Mínimos</button>
+            </Link>
+            <Link href="/dashboard/estoque/movimentar">
+              <button className="px-4 py-2 border rounded-md text-sm font-medium bg-white">Movimentar Estoque</button>
+            </Link>
+            <Link href="/dashboard/estoque/adicionar">
+              <button className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Adicionar Produto
+              </button>
+            </Link>
+          </>
+        }
+      />
+
+      <TabNavigation tabs={tabs} className="mb-6" />
+
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="font-medium">Produtos em Estoque</h2>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar produtos..."
+              className="pl-8 pr-4 py-2 border border-gray-300 rounded-md text-sm w-64"
+            />
+            <span className="absolute left-2.5 top-2.5">🔍</span>
+          </div>
+        </div>
+        <div className="p-6">
+          {produtos.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="font-medium mb-2">Nenhum produto encontrado</p>
+              <p className="text-sm">Adicione produtos ao estoque para visualizá-los aqui.</p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3">Código</th>
+                  <th className="px-6 py-3">Nome</th>
+                  <th className="px-6 py-3">Categoria</th>
+                  <th className="px-6 py-3 text-center">Quantidade</th>
+                  <th className="px-6 py-3 text-center">Estoque Mínimo</th>
+                  <th className="px-6 py-3 text-center">Status</th>
+                  <th className="px-6 py-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {produtos.map((produto) => (
+                  <tr key={produto.id}>{/* Conteúdo da tabela */}</tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
-
-      <Tabs defaultValue="geral" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="geral">Estoque Geral</TabsTrigger>
-          <TabsTrigger value="baixo">Estoque Baixo</TabsTrigger>
-          <TabsTrigger value="tecnicos">Estoque por Técnico</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="geral" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl font-bold">Produtos em Estoque</CardTitle>
-              <Package className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead className="text-center">Quantidade</TableHead>
-                      <TableHead className="text-center">Estoque Mínimo</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {produtos.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                          Nenhum produto encontrado. Adicione produtos ao estoque.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      produtos.map((produto) => (
-                        <TableRow key={produto.id}>
-                          <TableCell className="font-medium">{produto.codigo}</TableCell>
-                          <TableCell>{produto.nome}</TableCell>
-                          <TableCell>{produto.categoria}</TableCell>
-                          <TableCell className="text-center">{produto.quantidadeEstoque}</TableCell>
-                          <TableCell className="text-center">{produto.estoqueMinimo}</TableCell>
-                          <TableCell className="text-center">
-                            {produto.quantidadeEstoque <= produto.estoqueMinimo ? (
-                              <Badge
-                                variant="destructive"
-                                className="flex items-center justify-center gap-1 w-fit mx-auto"
-                              >
-                                <AlertCircle className="h-3 w-3" />
-                                Baixo
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="w-fit mx-auto">
-                                Normal
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Link href={`/dashboard/estoque/produtos/${produto.id}`}>
-                              <Button variant="ghost" size="sm">
-                                Detalhes
-                              </Button>
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="baixo" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl font-bold">Produtos com Estoque Baixo</CardTitle>
-              <AlertCircle className="h-5 w-5 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead className="text-center">Quantidade</TableHead>
-                      <TableHead className="text-center">Estoque Mínimo</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {produtosBaixoEstoque.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                          Não há produtos com estoque baixo.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      produtosBaixoEstoque.map((produto) => (
-                        <TableRow key={produto.id}>
-                          <TableCell className="font-medium">{produto.codigo}</TableCell>
-                          <TableCell>{produto.nome}</TableCell>
-                          <TableCell>{produto.categoria}</TableCell>
-                          <TableCell className="text-center">{produto.quantidadeEstoque}</TableCell>
-                          <TableCell className="text-center">{produto.estoqueMinimo}</TableCell>
-                          <TableCell className="text-right">
-                            <Link href={`/dashboard/estoque/produtos/${produto.id}`}>
-                              <Button variant="ghost" size="sm">
-                                Detalhes
-                              </Button>
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tecnicos" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl font-bold">Estoque por Técnico</CardTitle>
-              <RefreshCw className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {tecnicosEstoque.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">Nenhum técnico com estoque encontrado.</div>
-              ) : (
-                <div className="space-y-6">
-                  {tecnicosEstoque.map((tecnico) => (
-                    <div key={tecnico.id} className="rounded-md border p-4">
-                      <h3 className="text-lg font-medium mb-2">{tecnico.nome}</h3>
-                      <div className="rounded-md border">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Código</TableHead>
-                              <TableHead>Produto</TableHead>
-                              <TableHead className="text-center">Quantidade</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {tecnico.produtos.map((produto) => (
-                              <TableRow key={produto.id}>
-                                <TableCell className="font-medium">{produto.codigo}</TableCell>
-                                <TableCell>{produto.nome}</TableCell>
-                                <TableCell className="text-center">{produto.quantidade}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

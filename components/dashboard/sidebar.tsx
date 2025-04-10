@@ -2,136 +2,83 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useTheme } from "next-themes"
 import { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  LayoutDashboard,
+  Users,
+  Wrench,
+  Package,
+  ClipboardList,
+  DollarSign,
+  BarChart3,
+  FileText,
+  Settings,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
 
+// Definição dos itens de navegação com ícones do Lucide
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/dashboard/clientes", label: "Clientes", icon: "👥" },
-  { href: "/dashboard/tecnicos", label: "Técnicos", icon: "🛠️" },
-  { href: "/dashboard/estoque", label: "Estoque", icon: "📦" },
-  { href: "/dashboard/atendimentos", label: "Atendimentos", icon: "📋" },
-  { href: "/dashboard/vendas", label: "Vendas", icon: "💰" },
-  { href: "/dashboard/relatorios", label: "Relatórios", icon: "📈" },
-  { href: "/dashboard/documentos", label: "Documentos", icon: "📄" },
-  { href: "/dashboard/configuracoes", label: "Configurações", icon: "⚙️" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/clientes", label: "Clientes", icon: Users },
+  { href: "/dashboard/tecnicos", label: "Técnicos", icon: Wrench },
+  { href: "/dashboard/estoque", label: "Estoque", icon: Package },
+  { href: "/dashboard/atendimentos", label: "Atendimentos", icon: ClipboardList },
+  { href: "/dashboard/vendas", label: "Vendas", icon: DollarSign },
+  { href: "/dashboard/relatorios", label: "Relatórios", icon: BarChart3 },
+  { href: "/dashboard/documentos", label: "Documentos", icon: FileText },
+  { href: "/dashboard/configuracoes", label: "Configurações", icon: Settings },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { theme } = useTheme()
-  const isDarkMode = theme === "dark"
+  const [mounted, setMounted] = useState(false)
 
-  // Estado para controlar se a barra lateral está expandida ou retraída
-  const [isExpanded, setIsExpanded] = useState(true)
-
-  // Recuperar o estado da barra lateral do localStorage (apenas no cliente)
   useEffect(() => {
-    const savedState = localStorage.getItem("sidebarExpanded")
-    if (savedState !== null) {
-      setIsExpanded(savedState === "true")
-    }
+    setMounted(true)
   }, [])
 
-  // Salvar o estado da barra lateral no localStorage quando mudar
-  useEffect(() => {
-    localStorage.setItem("sidebarExpanded", isExpanded.toString())
-  }, [isExpanded])
+  if (!mounted) {
+    return null
+  }
 
   return (
-    <div
-      style={{
-        width: isExpanded ? "240px" : "64px",
-        height: "100vh",
-        borderRight: isDarkMode ? "1px solid #444" : "1px solid #e0e0e0",
-        backgroundColor: isDarkMode ? "#1e1e1e" : "white",
-        overflowY: "auto",
-        position: "sticky",
-        top: "0",
-        transition: "width 0.3s ease",
-      }}
-    >
-      {/* Logo/Título do sistema */}
-      <div
-        style={{
-          padding: isExpanded ? "16px 24px" : "16px 0",
-          borderBottom: isDarkMode ? "1px solid #444" : "1px solid #e0e0e0",
-          display: "flex",
-          justifyContent: isExpanded ? "space-between" : "center",
-          alignItems: "center",
-        }}
-      >
-        {isExpanded && (
-          <Link href="/dashboard">
-            <span style={{ fontWeight: "bold", fontSize: "18px" }}>Global Seg</span>
-          </Link>
-        )}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          style={{
-            backgroundColor: isDarkMode ? "#2d2d2d" : "#f1f3f4",
-            border: "none",
-            borderRadius: "50%",
-            width: "28px",
-            height: "28px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            color: isDarkMode ? "#e0e0e0" : "#5f6368",
-          }}
-          title={isExpanded ? "Retrair menu" : "Expandir menu"}
+    <aside className="fixed left-0 top-0 h-full w-16 bg-white border-r border-gray-200 flex flex-col items-center py-4 z-10 dark:bg-gray-900 dark:border-gray-700">
+      <div className="mb-6">
+        <Link
+          href="/dashboard"
+          className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg font-bold"
         >
-          {isExpanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-        </button>
+          GS
+        </Link>
       </div>
 
-      <nav style={{ padding: "8px 0" }}>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      <nav className="flex-1 w-full">
+        <ul className="space-y-4">
           {navItems.map((item) => {
-            // Check if the current path exactly matches the item's href or starts with it (for nested routes)
-            // For the dashboard, we only want an exact match
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
                 : pathname === item.href || pathname?.startsWith(`${item.href}/`)
 
             return (
-              <li key={item.href} style={{ marginBottom: "4px" }}>
+              <li key={item.href} className="flex justify-center">
                 <Link
                   href={item.href}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: isExpanded ? "12px 24px" : "12px 0",
-                    justifyContent: isExpanded ? "flex-start" : "center",
-                    textDecoration: "none",
-                    color: isActive ? "#1a73e8" : isDarkMode ? "#e0e0e0" : "#5f6368",
-                    backgroundColor: isActive ? (isDarkMode ? "#2d2d2d" : "#e8f0fe") : "transparent",
-                    fontWeight: isActive ? "500" : "normal",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                  }}
+                  className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-lg transition-colors",
+                    isActive
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-300",
+                  )}
                   title={item.label}
                 >
-                  <span
-                    style={{
-                      marginRight: isExpanded ? "12px" : "0",
-                      fontSize: "18px",
-                      minWidth: "24px",
-                      textAlign: "center",
-                    }}
-                  >
-                    {item.icon}
-                  </span>
-                  {isExpanded && item.label}
+                  <item.icon className="h-5 w-5" />
                 </Link>
               </li>
             )
           })}
         </ul>
       </nav>
-    </div>
+    </aside>
   )
 }

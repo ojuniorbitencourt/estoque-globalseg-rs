@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -35,8 +35,8 @@ export default function TecnicoDetalhesPage({ params }: { params: { id: string }
   const [error, setError] = useState<string | null>(null)
   const [produtosEstoque, setProdutosEstoque] = useState<Produto[]>([])
 
-  // Usar React.use para acessar params.id de forma segura
-  const tecnicoId = use(params).id
+  // Acessar params.id diretamente, sem usar o hook use()
+  const tecnicoId = params.id
 
   const fetchTecnico = async () => {
     setLoading(true)

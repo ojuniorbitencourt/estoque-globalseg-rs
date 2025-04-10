@@ -1,9 +1,9 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import "./globals.css"
-import { ClientProvider } from "@/components/client-provider"
+import "./globals.css" // Importação correta do globals.css no layout raiz
 import { ThemeProvider } from "@/components/theme-provider"
+import { ClientProvider } from "@/components/client-provider"
 import { Toaster } from "sonner"
 
 const inter = Inter({ subsets: ["latin"] })
