@@ -13,11 +13,7 @@ type NovoTecnicoDialogProps = {
 export function NovoTecnicoDialog({ open, onOpenChange, onTecnicoAdicionado }: NovoTecnicoDialogProps) {
   const [formData, setFormData] = useState({
     nome: "",
-    email: "",
-    senha: "",
     cargo: "",
-    especialidade: "",
-    status: "Ativo",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -51,11 +47,7 @@ export function NovoTecnicoDialog({ open, onOpenChange, onTecnicoAdicionado }: N
       onOpenChange(false)
       setFormData({
         nome: "",
-        email: "",
-        senha: "",
         cargo: "",
-        especialidade: "",
-        status: "Ativo",
       })
     } catch (error) {
       console.error("Erro ao adicionar técnico:", error)
@@ -143,52 +135,6 @@ export function NovoTecnicoDialog({ open, onOpenChange, onTecnicoAdicionado }: N
 
               <div>
                 <label
-                  htmlFor="email"
-                  style={{ display: "block", marginBottom: "8px", fontWeight: "500", fontSize: "14px" }}
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    border: "1px solid #dadce0",
-                    borderRadius: "4px",
-                  }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="senha"
-                  style={{ display: "block", marginBottom: "8px", fontWeight: "500", fontSize: "14px" }}
-                >
-                  Senha
-                </label>
-                <input
-                  id="senha"
-                  name="senha"
-                  type="password"
-                  value={formData.senha}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    border: "1px solid #dadce0",
-                    borderRadius: "4px",
-                  }}
-                  placeholder="Deixe em branco para senha padrão"
-                />
-              </div>
-
-              <div>
-                <label
                   htmlFor="cargo"
                   style={{ display: "block", marginBottom: "8px", fontWeight: "500", fontSize: "14px" }}
                 >
@@ -207,53 +153,6 @@ export function NovoTecnicoDialog({ open, onOpenChange, onTecnicoAdicionado }: N
                   }}
                   required
                 />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="especialidade"
-                  style={{ display: "block", marginBottom: "8px", fontWeight: "500", fontSize: "14px" }}
-                >
-                  Especialidade
-                </label>
-                <input
-                  id="especialidade"
-                  name="especialidade"
-                  value={formData.especialidade}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    border: "1px solid #dadce0",
-                    borderRadius: "4px",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="status"
-                  style={{ display: "block", marginBottom: "8px", fontWeight: "500", fontSize: "14px" }}
-                >
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    border: "1px solid #dadce0",
-                    borderRadius: "4px",
-                    backgroundColor: "white",
-                  }}
-                  required
-                >
-                  <option value="Ativo">Ativo</option>
-                  <option value="Inativo">Inativo</option>
-                </select>
               </div>
             </div>
 

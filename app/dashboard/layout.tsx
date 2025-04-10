@@ -5,8 +5,6 @@ import type React from "react"
 import { useAuth } from "@/components/client-provider"
 import { useEffect, useState } from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
-import { MainNav } from "@/components/dashboard/main-nav"
-import { UserNav } from "@/components/dashboard/user-nav"
 import { MobileNav } from "@/components/dashboard/mobile-nav"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -75,30 +73,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <header
-        className={cn(
-          "h-16 flex items-center px-6 sticky top-0 z-10 border-b bg-background",
-          isDarkMode ? "border-[#444]" : "border-[#e0e0e0]",
-        )}
-      >
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center">
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden mr-4 bg-transparent border-none cursor-pointer p-2"
-            >
-              <span className="text-2xl">☰</span>
-            </button>
-            <div className="font-bold text-lg mr-6">Global Seg</div>
-            <div className="hidden md:block">
-              <MainNav />
-            </div>
-          </div>
-          <UserNav />
-        </div>
-      </header>
-
       <div className="flex flex-1">
         {/* Sidebar */}
         <div className="hidden md:block" style={{ transition: "width 0.3s ease" }}>
@@ -119,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Main content */}
         <main
-          className="flex-1 min-h-[calc(100vh-64px)] bg-muted"
+          className="flex-1 min-h-screen bg-muted"
           style={{
             transition: "padding-left 0.3s ease",
             paddingLeft: "16px",
@@ -128,6 +102,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             paddingBottom: "16px",
           }}
         >
+          {/* Botão de menu móvel */}
+          <div className="md:hidden mb-4">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-md bg-background border border-input"
+            >
+              <span className="sr-only">Abrir menu</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
           {children}
         </main>
       </div>

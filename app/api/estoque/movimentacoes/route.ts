@@ -3,24 +3,25 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(request: Request) {
   try {
-    const { produtoId, quantidade, tipo, origem, destino, observacao } = await request.json()
+    const data = await request.json()
+    console.log("Dados recebidos para movimentação:", data)
 
     // Validar dados
-    if (!produtoId) {
+    if (!data.produtoId) {
       return NextResponse.json({ error: "ID do produto é obrigatório" }, { status: 400 })
     }
 
-    if (!quantidade || quantidade <= 0) {
+    if (!data.quantidade || data.quantidade <= 0) {
       return NextResponse.json({ error: "Quantidade deve ser maior que zero" }, { status: 400 })
     }
 
-    if (!["entrada", "saida", "transferencia"].includes(tipo)) {
+    if (!["entrada", "saida", "transferencia"].includes(data.tipo)) {
       return NextResponse.json({ error: "Tipo de movimentação inválido" }, { status: 400 })
     }
 
     // Verificar se o produto existe
     const produto = await prisma.produto.findUnique({
-      where: { id: produtoId },
+      where: { id: data.produtoId },
     })
 
     if (!produto) {
@@ -29,69 +30,80 @@ export async function POST(request: Request) {
 
     // Iniciar transação
     const result = await prisma.$transaction(async (tx) => {
-      // Registrar movimentação
-      const movimentacao = await tx.movimentacaoEstoque.create({
-        data: {
-          produtoId,
-          quantidade,
-          tipo,
-          origem: origem || null,
-          destino: destino || null,
-          observacao,
-        },
-      })
+      // Preparar dados para a movimentação
+      const movimentacaoData = {
+        produtoId: data.produtoId,
+        quantidade: data.quantidade,
+        tipo: data.tipo,
+        observacao: data.observacao || null,
+      }
 
-      // Atualizar estoque do produto conforme o tipo de movimentação
-      if (tipo === "entrada") {
-        // Entrada no estoque geral
-        await tx.produto.update({
-          where: { id: produtoId },
-          data: {
-            quantidadeEstoque: {
-              increment: quantidade,
-            },
-          },
-        })
-      } else if (tipo === "saida") {
-        // Verificar se há estoque suficiente
-        if (produto.quantidadeEstoque < quantidade) {
-          throw new Error("Estoque insuficiente para esta operação")
+      // Adicionar origem e destino conforme o tipo de movimentação
+      if (data.tipo === "transferencia") {
+        // Verificar se origem e destino são válidos
+        if (!data.origem) {
+          throw new Error("Origem é obrigatória para transferências")
         }
 
-        // Saída do estoque geral
-        await tx.produto.update({
-          where: { id: produtoId },
+        if (!data.destino) {
+          throw new Error("Destino é obrigatório para transferências")
+        }
+
+        // Verificar se origem é "geral" ou um ID de técnico válido
+        if (data.origem !== "geral") {
+          const tecnicoOrigem = await tx.tecnico.findUnique({
+            where: { id: data.origem },
+          })
+
+          if (!tecnicoOrigem) {
+            throw new Error("Técnico de origem não encontrado")
+          }
+        }
+
+        // Verificar se destino é "geral" ou um ID de técnico válido
+        if (data.destino !== "geral") {
+          const tecnicoDestino = await tx.tecnico.findUnique({
+            where: { id: data.destino },
+          })
+
+          if (!tecnicoDestino) {
+            throw new Error("Técnico de destino não encontrado")
+          }
+        }
+
+        // Registrar movimentação
+        const movimentacao = await tx.movimentacaoEstoque.create({
           data: {
-            quantidadeEstoque: {
-              decrement: quantidade,
-            },
+            ...movimentacaoData,
+            origem: data.origem === "geral" ? null : data.origem,
+            destino: data.destino === "geral" ? null : data.destino,
           },
         })
-      } else if (tipo === "transferencia") {
-        // Transferência entre estoques
-        if (origem === "geral") {
+
+        // Atualizar estoques conforme a transferência
+        if (data.origem === "geral") {
           // Verificar se há estoque suficiente
-          if (produto.quantidadeEstoque < quantidade) {
+          if (produto.quantidadeEstoque < data.quantidade) {
             throw new Error("Estoque insuficiente para esta operação")
           }
 
           // Transferência do estoque geral para um técnico
           await tx.produto.update({
-            where: { id: produtoId },
+            where: { id: data.produtoId },
             data: {
               quantidadeEstoque: {
-                decrement: quantidade,
+                decrement: data.quantidade,
               },
             },
           })
 
           // Adicionar ao estoque do técnico
-          if (destino) {
+          if (data.destino !== "geral") {
             const estoqueExistente = await tx.estoqueTecnico.findUnique({
               where: {
                 tecnicoId_produtoId: {
-                  tecnicoId: destino,
-                  produtoId,
+                  tecnicoId: data.destino,
+                  produtoId: data.produtoId,
                 },
               },
             })
@@ -100,78 +112,76 @@ export async function POST(request: Request) {
               await tx.estoqueTecnico.update({
                 where: {
                   tecnicoId_produtoId: {
-                    tecnicoId: destino,
-                    produtoId,
+                    tecnicoId: data.destino,
+                    produtoId: data.produtoId,
                   },
                 },
                 data: {
                   quantidade: {
-                    increment: quantidade,
+                    increment: data.quantidade,
                   },
                 },
               })
             } else {
               await tx.estoqueTecnico.create({
                 data: {
-                  tecnicoId: destino,
-                  produtoId,
-                  quantidade,
+                  tecnicoId: data.destino,
+                  produtoId: data.produtoId,
+                  quantidade: data.quantidade,
                 },
               })
             }
           }
-        } else if (destino === "geral") {
+        } else if (data.destino === "geral") {
           // Transferência de um técnico para o estoque geral
-          if (origem) {
-            const estoqueExistente = await tx.estoqueTecnico.findUnique({
-              where: {
-                tecnicoId_produtoId: {
-                  tecnicoId: origem,
-                  produtoId,
-                },
-              },
-            })
-
-            if (!estoqueExistente || estoqueExistente.quantidade < quantidade) {
-              throw new Error("Estoque do técnico insuficiente para esta operação")
-            }
-
-            await tx.estoqueTecnico.update({
-              where: {
-                tecnicoId_produtoId: {
-                  tecnicoId: origem,
-                  produtoId,
-                },
-              },
-              data: {
-                quantidade: {
-                  decrement: quantidade,
-                },
-              },
-            })
-
-            // Adicionar ao estoque geral
-            await tx.produto.update({
-              where: { id: produtoId },
-              data: {
-                quantidadeEstoque: {
-                  increment: quantidade,
-                },
-              },
-            })
-          }
-        } else if (origem && destino) {
-          // Transferência entre técnicos
           const estoqueExistente = await tx.estoqueTecnico.findUnique({
             where: {
               tecnicoId_produtoId: {
-                tecnicoId: origem,
-                produtoId,
+                tecnicoId: data.origem,
+                produtoId: data.produtoId,
               },
             },
           })
 
-          if (!estoqueExistente || estoqueExistente.quantidade < quantidade) {
+          if (!estoqueExistente || estoqueExistente.quantidade < data.quantidade) {
+            throw new Error("Estoque do técnico insuficiente para esta operação")
+          }
+
+          await tx.estoqueTecnico.update({
+            where: {
+              tecnicoId_produtoId: {
+                tecnicoId: data.origem,
+                produtoId: data.produtoId,
+              },
+            },
+            data: {
+              quantidade: {
+                decrement: data.quantidade,
+              },
+            },
+          })
+
+          // Adicionar ao estoque geral
+          await tx.produto.update({
+            where: { id: data.produtoId },
+            data: {
+              quantidadeEstoque: {
+                increment: data.quantidade,
+              },
+            },
+          })
+        } else {
+          // Transferência entre técnicos
+          const estoqueExistente = await tx.estoqueTecnico.findUnique({
+            where: {
+              tecnicoId_produtoId: {
+                tecnicoId: data.origem,
+                produtoId: data.produtoId,
+              },
+            },
+          })
+
+          if (!estoqueExistente || estoqueExistente.quantidade < data.quantidade) {
             throw new Error("Estoque do técnico de origem insuficiente para esta operação")
           }
 
@@ -179,13 +189,13 @@ export async function POST(request: Request) {
           await tx.estoqueTecnico.update({
             where: {
               tecnicoId_produtoId: {
-                tecnicoId: origem,
-                produtoId,
+                tecnicoId: data.origem,
+                produtoId: data.produtoId,
               },
             },
             data: {
               quantidade: {
-                decrement: quantidade,
+                decrement: data.quantidade,
               },
             },
           })
@@ -194,8 +204,8 @@ export async function POST(request: Request) {
           const estoqueDestinoExistente = await tx.estoqueTecnico.findUnique({
             where: {
               tecnicoId_produtoId: {
-                tecnicoId: destino,
-                produtoId,
+                tecnicoId: data.destino,
+                produtoId: data.produtoId,
               },
             },
           })
@@ -204,29 +214,66 @@ export async function POST(request: Request) {
             await tx.estoqueTecnico.update({
               where: {
                 tecnicoId_produtoId: {
-                  tecnicoId: destino,
-                  produtoId,
+                  tecnicoId: data.destino,
+                  produtoId: data.produtoId,
                 },
               },
               data: {
                 quantidade: {
-                  increment: quantidade,
+                  increment: data.quantidade,
                 },
               },
             })
           } else {
             await tx.estoqueTecnico.create({
               data: {
-                tecnicoId: destino,
-                produtoId,
-                quantidade,
+                tecnicoId: data.destino,
+                produtoId: data.produtoId,
+                quantidade: data.quantidade,
               },
             })
           }
         }
-      }
 
-      return movimentacao
+        return movimentacao
+      } else if (data.tipo === "entrada") {
+        // Entrada no estoque geral
+        const movimentacao = await tx.movimentacaoEstoque.create({
+          data: movimentacaoData,
+        })
+
+        await tx.produto.update({
+          where: { id: data.produtoId },
+          data: {
+            quantidadeEstoque: {
+              increment: data.quantidade,
+            },
+          },
+        })
+
+        return movimentacao
+      } else if (data.tipo === "saida") {
+        // Verificar se há estoque suficiente
+        if (produto.quantidadeEstoque < data.quantidade) {
+          throw new Error("Estoque insuficiente para esta operação")
+        }
+
+        // Saída do estoque geral
+        const movimentacao = await tx.movimentacaoEstoque.create({
+          data: movimentacaoData,
+        })
+
+        await tx.produto.update({
+          where: { id: data.produtoId },
+          data: {
+            quantidadeEstoque: {
+              decrement: data.quantidade,
+            },
+          },
+        })
+
+        return movimentacao
+      }
     })
 
     return NextResponse.json(result)
@@ -248,24 +295,6 @@ export async function GET() {
           select: {
             nome: true,
             codigo: true,
-          },
-        },
-        tecnicoOrigem: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-        tecnicoDestino: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
           },
         },
       },

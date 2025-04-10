@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
         user: {
           select: {
             name: true,
-            email: true,
           },
         },
       },
@@ -32,47 +31,36 @@ export async function POST(request: NextRequest) {
     const data = await request.json()
 
     // Validate required fields
-    if (!data.nome || !data.email || !data.cargo) {
-      return NextResponse.json({ error: "Campos obrigatórios: nome, email e cargo" }, { status: 400 })
+    if (!data.nome || !data.cargo) {
+      return NextResponse.json({ error: "Campos obrigatórios: nome e cargo" }, { status: 400 })
     }
 
-    // Check if email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
-    })
-
-    if (existingUser) {
-      return NextResponse.json({ error: "Email já cadastrado" }, { status: 400 })
-    }
-
-    // Create password hash (use default if not provided)
-    const hashedPassword = await bcrypt.hash(data.senha || "senha123", 12)
+    // Create password hash (always use default)
+    const hashedPassword = await bcrypt.hash("senha123", 12)
 
     // Create user and technician in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create user
+      // Create user with a generated email
       const user = await tx.user.create({
         data: {
           name: data.nome,
-          email: data.email,
+          email: `tecnico_${Date.now()}@globalseg.local`, // Email gerado automaticamente
           password: hashedPassword,
           role: "tecnico",
         },
       })
 
-      // Create technician
+      // Create technician with default status "Ativo"
       const tecnico = await tx.tecnico.create({
         data: {
           userId: user.id,
           cargo: data.cargo,
-          especialidade: data.especialidade || "",
-          status: data.status || "Ativo",
+          status: "Ativo", // Status padrão sempre "Ativo"
         },
         include: {
           user: {
             select: {
               name: true,
-              email: true,
             },
           },
         },

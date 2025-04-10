@@ -43,22 +43,30 @@ export function Sidebar() {
     <div
       style={{
         width: isExpanded ? "240px" : "64px",
-        height: "calc(100vh - 64px)",
+        height: "100vh",
         borderRight: isDarkMode ? "1px solid #444" : "1px solid #e0e0e0",
         backgroundColor: isDarkMode ? "#1e1e1e" : "white",
         overflowY: "auto",
         position: "sticky",
-        top: "64px",
+        top: "0",
         transition: "width 0.3s ease",
       }}
     >
+      {/* Logo/Título do sistema */}
       <div
         style={{
+          padding: isExpanded ? "16px 24px" : "16px 0",
+          borderBottom: isDarkMode ? "1px solid #444" : "1px solid #e0e0e0",
           display: "flex",
-          justifyContent: "flex-end",
-          padding: "8px",
+          justifyContent: isExpanded ? "space-between" : "center",
+          alignItems: "center",
         }}
       >
+        {isExpanded && (
+          <Link href="/dashboard">
+            <span style={{ fontWeight: "bold", fontSize: "18px" }}>Global Seg</span>
+          </Link>
+        )}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           style={{

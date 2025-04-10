@@ -15,9 +15,7 @@ import { toast } from "sonner"
 interface Tecnico {
   id: string
   nome: string
-  email: string
   cargo: string
-  especialidade: string
   status: string
   estoqueTecnico: any[]
   atendimentos: any[]
@@ -55,9 +53,7 @@ export default function TecnicoDetalhesPage({ params }: { params: { id: string }
       const tecnicoData = {
         id: data.id,
         nome: data.user?.name || "N/A",
-        email: data.user?.email || "N/A",
         cargo: data.cargo,
-        especialidade: data.especialidade,
         status: data.status,
         estoqueTecnico: data.estoqueTecnico || [],
         atendimentos: data.atendimentos || [],
@@ -176,13 +172,7 @@ export default function TecnicoDetalhesPage({ params }: { params: { id: string }
               <span className="font-medium">Nome:</span> {tecnico.nome}
             </div>
             <div>
-              <span className="font-medium">Email:</span> {tecnico.email}
-            </div>
-            <div>
               <span className="font-medium">Cargo:</span> {tecnico.cargo}
-            </div>
-            <div>
-              <span className="font-medium">Especialidade:</span> {tecnico.especialidade}
             </div>
             <div>
               <span className="font-medium">Status:</span>{" "}
@@ -304,4 +294,3 @@ export default function TecnicoDetalhesPage({ params }: { params: { id: string }
     </div>
   )
 }
-  

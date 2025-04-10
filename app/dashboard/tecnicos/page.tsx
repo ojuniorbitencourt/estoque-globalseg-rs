@@ -9,11 +9,10 @@ type Tecnico = {
   user: {
     id: string
     name: string
-    email: string
+    email?: string
     role: string
   }
   cargo: string
-  especialidade: string
   status: string
 }
 
@@ -54,9 +53,7 @@ export default function TecnicosPage() {
 
     return (
       (tecnico.user.name && tecnico.user.name.toLowerCase().includes(busca.toLowerCase())) ||
-      (tecnico.user.email && tecnico.user.email.toLowerCase().includes(busca.toLowerCase())) ||
-      (tecnico.cargo && tecnico.cargo.toLowerCase().includes(busca.toLowerCase())) ||
-      (tecnico.especialidade && tecnico.especialidade.toLowerCase().includes(busca.toLowerCase()))
+      (tecnico.cargo && tecnico.cargo.toLowerCase().includes(busca.toLowerCase()))
     )
   })
 
@@ -174,9 +171,7 @@ export default function TecnicosPage() {
                 <thead>
                   <tr style={{ borderBottom: "1px solid #e0e0e0" }}>
                     <th style={{ padding: "16px 8px", textAlign: "left", fontWeight: "500" }}>Nome</th>
-                    <th style={{ padding: "16px 8px", textAlign: "left", fontWeight: "500" }}>Email</th>
                     <th style={{ padding: "16px 8px", textAlign: "left", fontWeight: "500" }}>Cargo</th>
-                    <th style={{ padding: "16px 8px", textAlign: "left", fontWeight: "500" }}>Especialidade</th>
                     <th style={{ padding: "16px 8px", textAlign: "left", fontWeight: "500" }}>Status</th>
                     <th style={{ padding: "16px 8px", textAlign: "right", fontWeight: "500" }}>Ações</th>
                   </tr>
@@ -189,9 +184,7 @@ export default function TecnicosPage() {
                         style={{ borderBottom: "1px solid #e0e0e0", transition: "background-color 0.2s" }}
                       >
                         <td style={{ padding: "16px 8px", fontWeight: "500" }}>{tecnico.user.name}</td>
-                        <td style={{ padding: "16px 8px", color: "#5f6368" }}>{tecnico.user.email}</td>
                         <td style={{ padding: "16px 8px", color: "#5f6368" }}>{tecnico.cargo}</td>
-                        <td style={{ padding: "16px 8px", color: "#5f6368" }}>{tecnico.especialidade}</td>
                         <td style={{ padding: "16px 8px" }}>
                           <span
                             style={{
@@ -227,7 +220,7 @@ export default function TecnicosPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} style={{ padding: "40px 0", textAlign: "center", color: "#5f6368" }}>
+                      <td colSpan={4} style={{ padding: "40px 0", textAlign: "center", color: "#5f6368" }}>
                         Nenhum técnico encontrado.
                       </td>
                     </tr>
