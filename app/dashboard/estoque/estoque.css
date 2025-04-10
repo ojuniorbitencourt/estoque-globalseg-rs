@@ -1,0 +1,76 @@
+/* Estilos específicos para a página de estoque */
+.estoque-header {
+  @apply flex items-center justify-between mb-6;
+}
+
+.estoque-title {
+  @apply text-2xl font-bold;
+}
+
+.estoque-actions {
+  @apply flex gap-2;
+}
+
+.estoque-tabs {
+  @apply space-y-4;
+}
+
+.estoque-card {
+  @apply bg-[#1e293b] rounded-lg shadow-md border border-gray-800;
+}
+
+.estoque-card-header {
+  @apply flex flex-row items-center justify-between space-y-0 pb-2 p-6;
+}
+
+.estoque-card-title {
+  @apply text-xl font-bold;
+}
+
+.estoque-table-container {
+  @apply rounded-md border;
+}
+
+.estoque-table {
+  @apply w-full;
+}
+
+.estoque-table th {
+  @apply bg-[#1a2035] text-gray-300;
+}
+
+.estoque-table tr {
+  @apply border-b border-gray-800;
+}
+
+.estoque-table tr:hover {
+  @apply bg-[#283548];
+}
+
+.estoque-table td {
+  @apply py-3;
+}
+
+.estoque-badge-normal {
+  @apply bg-gray-700 text-gray-200 w-fit mx-auto;
+}
+
+.estoque-badge-baixo {
+  @apply bg-red-900 text-red-200 flex items-center justify-center gap-1 w-fit mx-auto;
+}
+
+.estoque-empty {
+  @apply text-center py-6 text-muted-foreground;
+}
+
+.estoque-tecnico-container {
+  @apply space-y-6;
+}
+
+.estoque-tecnico-card {
+  @apply rounded-md border border-gray-800 p-4;
+}
+
+.estoque-tecnico-name {
+  @apply text-lg font-medium mb-2;
+}

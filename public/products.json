@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "code": "PGDM-001",
+    "name": "Cabo HDMI 2.0",
+    "quantity": 15,
+    "min_quantity": 5,
+    "category": "PGDM",
+    "status": "Ativo"
+  },
+  {
+    "id": "2",
+    "code": "ATM-001",
+    "name": "Sensor de Movimento",
+    "quantity": 8,
+    "min_quantity": 10,
+    "category": "ATM",
+    "status": "Ativo"
+  }
+]

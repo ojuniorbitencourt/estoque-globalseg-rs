@@ -57,8 +57,12 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const produtos = await prisma.produto.findMany({
-      where: { status: "Ativo" },
-      orderBy: { nome: "asc" },
+      where: {
+        status: "Ativo",
+      },
+      orderBy: {
+        nome: "asc",
+      },
     })
 
     return NextResponse.json(produtos)
