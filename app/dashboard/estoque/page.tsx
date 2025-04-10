@@ -1,81 +1,116 @@
-import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
-import { TabNavigation } from "@/components/dashboard/tab-navigation"
-import { Plus } from "lucide-react"
-
 export default function EstoquePage() {
-  // Simulando dados de produtos
-  const produtos = []
-
-  const tabs = [
-    { id: "geral", label: "Estoque Geral" },
-    { id: "baixo", label: "Estoque Baixo" },
-    { id: "tecnicos", label: "Estoque por Técnico" },
-  ]
-
   return (
-    <div>
-      <PageHeader
-        title="Estoque"
-        subtitle="Gerencie o estoque de produtos e equipamentos"
-        actions={
-          <>
-            <Link href="/dashboard/estoque/minimo">
-              <button className="px-4 py-2 border rounded-md text-sm font-medium bg-white">Configurar Mínimos</button>
-            </Link>
-            <Link href="/dashboard/estoque/movimentar">
-              <button className="px-4 py-2 border rounded-md text-sm font-medium bg-white">Movimentar Estoque</button>
-            </Link>
-            <Link href="/dashboard/estoque/adicionar">
-              <button className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Adicionar Produto
-              </button>
-            </Link>
-          </>
-        }
-      />
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <h1>Estoque</h1>
+          <p>Gerencie os produtos e equipamentos da empresa</p>
+        </div>
+        <button className="button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-2"
+          >
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg>
+          Novo Produto
+        </button>
+      </div>
 
-      <TabNavigation tabs={tabs} className="mb-6" />
+      <div className="search-bar">
+        <div className="search-input">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input type="text" placeholder="Buscar produtos..." />
+        </div>
+        <button className="button button-outline">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 6h18" />
+            <path d="M7 12h10" />
+            <path d="M10 18h4" />
+          </svg>
+        </button>
+      </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="font-medium">Produtos em Estoque</h2>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar produtos..."
-              className="pl-8 pr-4 py-2 border border-gray-300 rounded-md text-sm w-64"
-            />
-            <span className="absolute left-2.5 top-2.5">🔍</span>
+      <div className="dashboard-section">
+        <div className="section-header">
+          <div>
+            <h2>Produtos</h2>
+            <p>Lista de todos os produtos em estoque</p>
           </div>
         </div>
-        <div className="p-6">
-          {produtos.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="font-medium mb-2">Nenhum produto encontrado</p>
-              <p className="text-sm">Adicione produtos ao estoque para visualizá-los aqui.</p>
+
+        <div className="section-content">
+          <div className="empty-state">
+            <div className="empty-icon info">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              </svg>
             </div>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <th className="px-6 py-3">Código</th>
-                  <th className="px-6 py-3">Nome</th>
-                  <th className="px-6 py-3">Categoria</th>
-                  <th className="px-6 py-3 text-center">Quantidade</th>
-                  <th className="px-6 py-3 text-center">Estoque Mínimo</th>
-                  <th className="px-6 py-3 text-center">Status</th>
-                  <th className="px-6 py-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {produtos.map((produto) => (
-                  <tr key={produto.id}>{/* Conteúdo da tabela */}</tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+            <h3>Nenhum produto encontrado</h3>
+            <p>Adicione produtos ao estoque para visualizá-los aqui.</p>
+            <div style={{ marginTop: "16px" }}>
+              <button className="button">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-2"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M12 5v14" />
+                </svg>
+                Adicionar Produto
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

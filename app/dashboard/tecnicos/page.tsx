@@ -1,65 +1,57 @@
-import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
-import { Plus } from "lucide-react"
+import { Plus, Search, Filter } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { SectionCard } from "@/components/dashboard/section-card"
 
 export default function TecnicosPage() {
-  // Simulando dados de técnicos
-  const tecnicos = []
-
   return (
-    <div>
-      <PageHeader
-        title="Técnicos"
-        subtitle="Gerencie sua equipe técnica e atribuições"
-        actions={
-          <Link href="/dashboard/tecnicos/novo">
-            <button className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Novo Técnico
-            </button>
-          </Link>
-        }
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Técnicos</h1>
+          <p className="text-sm text-gray-500">Gerencie a equipe técnica e seus estoques individuais</p>
+        </div>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Técnico
+        </Button>
+      </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="font-medium">Lista de todos os técnicos cadastrados no sistema</h2>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar técnicos..."
-              className="pl-8 pr-4 py-2 border border-gray-300 rounded-md text-sm w-64"
-            />
-            <span className="absolute left-2.5 top-2.5">🔍</span>
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input placeholder="Buscar técnicos..." className="pl-9" />
+        </div>
+        <Button variant="outline" size="icon">
+          <Filter className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <SectionCard title="Técnicos" description="Lista de técnicos ativos">
+        <div className="rounded-lg border">
+          <div className="grid grid-cols-4 border-b bg-gray-50 p-3 text-sm font-medium text-gray-500">
+            <div>Nome</div>
+            <div>Contato</div>
+            <div>Produtos em estoque</div>
+            <div className="text-right">Ações</div>
+          </div>
+          <div className="p-3">
+            <div className="grid grid-cols-4 items-center py-2">
+              <div className="font-medium">João Silva</div>
+              <div className="text-sm text-gray-500">(11) 98765-4321</div>
+              <div className="text-sm">5 produtos</div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm">
+                  Ver Estoque
+                </Button>
+                <Button variant="outline" size="sm">
+                  Editar
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="p-6">
-          {tecnicos.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="font-medium mb-2">Nenhum técnico encontrado</p>
-              <p className="text-sm">Adicione técnicos para visualizá-los aqui.</p>
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <th className="px-6 py-3">Nome</th>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Cargo</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Itens em Estoque</th>
-                  <th className="px-6 py-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {tecnicos.map((tecnico) => (
-                  <tr key={tecnico.id}>{/* Conteúdo da tabela */}</tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+      </SectionCard>
     </div>
   )
 }
