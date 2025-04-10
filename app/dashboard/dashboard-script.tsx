@@ -1,82 +1,68 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 export default function DashboardScript() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
   useEffect(() => {
-    // Atualizar título da página com base na rota atual
-    const updatePageTitle = () => {
-      const path = window.location.pathname
-      const segments = path.split("/")
-      const lastSegment = segments[segments.length - 1]
-
-      const headerTitle = document.querySelector(".header-title h1")
-      const headerSubtitle = document.querySelector(".header-title p")
-
-      if (headerTitle) {
-        if (path === "/dashboard") {
-          headerTitle.textContent = "Dashboard"
-          if (headerSubtitle) {
-            headerSubtitle.textContent = "Bem-vindo ao painel de controle da Global Seg"
-          }
-        } else {
-          const title = lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1)
-          headerTitle.textContent = title
-          if (headerSubtitle) {
-            headerSubtitle.textContent = ""
-          }
-        }
-      }
-    }
-
-    updatePageTitle()
-
-    // Marcar item ativo no menu
-    const setActiveMenuItem = () => {
-      const path = window.location.pathname
-      const menuItems = document.querySelectorAll(".sidebar-nav li")
-
-      menuItems.forEach((item) => {
-        const link = item.querySelector("a")
-        if (!link) return
-
-        if (
-          path === link.getAttribute("href") ||
-          (path !== "/dashboard" &&
-            link.getAttribute("href") !== "/dashboard" &&
-            path.startsWith(link.getAttribute("href") || ""))
-        ) {
-          item.classList.add("active")
-        } else {
-          item.classList.remove("active")
-        }
-      })
-    }
-
-    setActiveMenuItem()
-
-    // Botão de colapso da sidebar
-    const collapseButton = document.querySelector(".collapse-button")
-    if (collapseButton) {
-      collapseButton.addEventListener("click", () => {
-        const sidebar = document.querySelector(".sidebar")
-        if (sidebar) {
-          sidebar.classList.toggle("collapsed")
-          const mainContent = document.querySelector(".main-content")
-          if (mainContent) {
-            mainContent.classList.toggle("expanded")
-          }
-        }
-      })
-    }
-
-    // Limpar event listeners
-    return () => {
-      if (collapseButton) {
-        collapseButton.removeEventListener("click", () => {})
-      }
+    // Restaurar o estado da sidebar do localStorage
+    const savedState = localStorage.getItem("sidebar-collapsed")
+    if (savedState === "true") {
+      setSidebarCollapsed(true)
     }
   }, [])
 
-  return null
+  useEffect(() => {
+    // Aplicar classes com base no estado
+    const sidebar = document.querySelector(".sidebar")
+    const mainContent = document.querySelector(".main-content")
+
+    if (sidebar) {
+      if (sidebarCollapsed) {
+        sidebar.classList.add("collapsed")
+      } else {
+        sidebar.classList.remove("collapsed")
+      }
+    }
+
+    if (mainContent) {
+      if (sidebarCollapsed) {
+        mainContent.classList.add("expanded")
+      } else {
+        mainContent.classList.remove("expanded")
+      }
+    }
+
+    // Salvar o estado no localStorage
+    localStorage.setItem("sidebar-collapsed", sidebarCollapsed ? "true" : "false")
+  }, [sidebarCollapsed])
+
+  // Função para alternar o estado da sidebar
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed)
+  }
+
+  return (
+    <button
+      className="collapse-button"
+      onClick={toggleSidebar}
+      style={{ position: "absolute", top: "20px", right: "16px", zIndex: 100 }}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ transform: sidebarCollapsed ? "rotate(180deg)" : "none", transition: "transform 0.3s ease" }}
+      >
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+  )
 }
